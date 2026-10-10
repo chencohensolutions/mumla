@@ -46,6 +46,8 @@ allprojects {
 android {
     namespace = 'se.lublin.mumla'
     compileSdk = 36
+    useLibrary 'android.test.runner'
+    useLibrary 'android.test.base'
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_21

@@ -43,6 +43,25 @@ There is a small [landing page](https://mumla-app.gitlab.io/).
 
 ## FAQs -- Frequently Asked Questions
 
+### When does Mumla use the microphone?
+
+While connected, Mumla keeps the microphone ready while an app screen is
+visible, so push-to-talk can start quickly. When all app screens are in
+the background (including when the screen is locked), microphone capture
+and any active transmission stop. The connection and incoming audio
+continue. Returning to the app restores microphone capture; push-to-talk
+must be pressed again, including when toggle mode is enabled.
+
+Overlay, hot-corner, and broadcast push-to-talk controls cannot transmit
+while the app is in the background. Voice activation and continuous
+transmission are also limited to the foreground.
+
+The instrumentation tests cover app-screen visibility and microphone
+capture stop/restart. With an Android device connected and microphone
+permission granted to the debug app, run
+`./gradlew :app:connectedFossDebugAndroidTest` (on Windows,
+`.\gradlew.bat :app:connectedFossDebugAndroidTest`).
+
 ### Action that my user has permission for does not show up in overflow menu
 
 Question: The Mumble server I use has an ACL that should give my user

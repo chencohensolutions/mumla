@@ -6,21 +6,74 @@ import static androidx.core.os.LocaleListCompat.getEmptyLocaleList;
 import static se.lublin.mumla.Settings.PREF_LANGUAGE;
 import static se.lublin.mumla.Settings.PREF_THEME;
 
+import android.app.Activity;
 import android.app.Application;
 import android.content.SharedPreferences;
+import android.os.Bundle;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatDelegate;
 import androidx.preference.PreferenceManager;
 
-public class MumlaApplication extends Application implements SharedPreferences.OnSharedPreferenceChangeListener {
+public class MumlaApplication extends Application implements SharedPreferences.OnSharedPreferenceChangeListener,
+        Application.ActivityLifecycleCallbacks {
+    private int mStartedActivities;
+    private ForegroundListener mForegroundListener;
+
+    public interface ForegroundListener {
+        void onForegroundChanged(boolean foreground);
+    }
+
+    public boolean isForeground() {
+        return mStartedActivities > 0;
+    }
+
+    public void setForegroundListener(@Nullable ForegroundListener listener) {
+        mForegroundListener = listener;
+        if (listener != null) {
+            listener.onForegroundChanged(isForeground());
+        }
+    }
+
     @Override
     public void onCreate() {
         super.onCreate();
+        registerActivityLifecycleCallbacks(this);
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
         applyTheme(preferences);
         preferences.registerOnSharedPreferenceChangeListener(this);
     }
+
+    @Override
+    public void onActivityStarted(Activity activity) {
+        mStartedActivities++;
+        if (mStartedActivities == 1 && mForegroundListener != null) {
+            mForegroundListener.onForegroundChanged(true);
+        }
+    }
+
+    @Override
+    public void onActivityStopped(Activity activity) {
+        mStartedActivities--;
+        if (mStartedActivities == 0 && mForegroundListener != null) {
+            mForegroundListener.onForegroundChanged(false);
+        }
+    }
+
+    @Override
+    public void onActivityCreated(Activity activity, Bundle savedInstanceState) {}
+
+    @Override
+    public void onActivityResumed(Activity activity) {}
+
+    @Override
+    public void onActivityPaused(Activity activity) {}
+
+    @Override
+    public void onActivitySaveInstanceState(Activity activity, Bundle outState) {}
+
+    @Override
+    public void onActivityDestroyed(Activity activity) {}
 
     @Override
     public void onSharedPreferenceChanged(SharedPreferences preferences, @Nullable String key) {

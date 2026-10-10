@@ -53,6 +53,7 @@ import se.lublin.humla.util.HumlaException;
 import se.lublin.humla.util.HumlaObserver;
 import se.lublin.mumla.R;
 import se.lublin.mumla.Settings;
+import se.lublin.mumla.app.MumlaApplication;
 import se.lublin.mumla.service.ipc.TalkBroadcastReceiver;
 import se.lublin.mumla.util.HtmlUtils;
 
@@ -316,6 +317,16 @@ public class MumlaService extends HumlaService implements
             mTTS = new TextToSpeech(this, mTTSInitListener);
 
         mTalkReceiver = new TalkBroadcastReceiver(this);
+        ((MumlaApplication) getApplication()).setForegroundListener(this::onForegroundChanged);
+    }
+
+    private void onForegroundChanged(boolean foreground) {
+        try {
+            setAudioInputEnabled(foreground);
+        } catch (AudioException e) {
+            Log.e(TAG, "Unable to update microphone capture for app visibility", e);
+            logWarning(e.getMessage());
+        }
     }
 
     @Override
@@ -325,6 +336,7 @@ public class MumlaService extends HumlaService implements
 
     @Override
     public void onDestroy() {
+        ((MumlaApplication) getApplication()).setForegroundListener(null);
         if (mNotification != null) {
             mNotification.hide();
             mNotification = null;
@@ -609,7 +621,7 @@ public class MumlaService extends HumlaService implements
      */
     @Override
     public void onTalkKeyDown() {
-        if(isConnectionEstablished()
+        if(((MumlaApplication) getApplication()).isForeground() && isConnectionEstablished()
                 && Settings.ARRAY_INPUT_METHOD_PTT.equals(mSettings.getInputMethod())) {
             if (!mSettings.isPushToTalkToggle() && !isTalking()) {
                 setTalkingState(true); // Start talking
@@ -623,7 +635,7 @@ public class MumlaService extends HumlaService implements
      */
     @Override
     public void onTalkKeyUp() {
-        if(isConnectionEstablished()
+        if(((MumlaApplication) getApplication()).isForeground() && isConnectionEstablished()
                 && Settings.ARRAY_INPUT_METHOD_PTT.equals(mSettings.getInputMethod())) {
             if (mSettings.isPushToTalkToggle()) {
                 setTalkingState(!isTalking()); // Toggle talk state
